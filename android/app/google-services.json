@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "367515628320",
+    "project_id": "engage-64b68",
+    "storage_bucket": "engage-64b68.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367515628320:android:cea7737b2637794efa5d45",
+        "android_client_info": {
+          "package_name": "com.engage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "367515628320-1hk7co2r2hgsoir852hhkqe360vp9df1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGU4EceZ9RjWUYd__Te60L819CgagJ_HA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "367515628320-1hk7co2r2hgsoir852hhkqe360vp9df1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367515628320:android:94d9d6b1df5cd6a7fa5d45",
+        "android_client_info": {
+          "package_name": "com.gurinder.engage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "367515628320-1hk7co2r2hgsoir852hhkqe360vp9df1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGU4EceZ9RjWUYd__Te60L819CgagJ_HA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "367515628320-1hk7co2r2hgsoir852hhkqe360vp9df1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
