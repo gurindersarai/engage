@@ -11,7 +11,6 @@ import { commonColors } from '../../styles/index';
 // import MessageSendForm from './MessageSendForm';
 import { fetchMessages } from '../../redux/actions/messageActions.js';
 import { appendMessage,prependMessage,setStart } from '../../redux/slices/messageSlice';
-import { GiftedChat } from 'react-native-gifted-chat';
 
 import Message from './Message';
 
@@ -73,7 +72,7 @@ const MessageList = ({ route }) => {
     const data = JSON.parse(event.data);
     navigation.setOptions({ headerTitle:() => ( tEle(uto.name,data.isTyping) ) });
     if(data.content){
-    dispatch(prependMessage([data]));
+    dispatch(appendMessage(data));
     }
   };
 
@@ -86,19 +85,15 @@ const MessageList = ({ route }) => {
   };
   const sendMessage = async () => {
     const msgData = {
-      _id:Date.now(),
       from:user.user.id,
       to:to,
         content: values.content,
-        text: values.content,
-        createdAt:new Date(),
-        user:{_id:user.user.id},
         isTyping:false,
     }
       console.log("ws Send!",msgData);
       
       ws.send(JSON.stringify(msgData));
-      dispatch(prependMessage([msgData]));
+      dispatch(prependMessage(msgData));
 
 }
 const onTyping = () => {
@@ -157,10 +152,37 @@ const handleLoadMoreMessages = () =>{
   
   
 }
-const isCloseToTop = ({ layoutMeasurement, contentOffset, contentSize }) =>{
-  const paddingToTop = 80;
-  return contentSize.height - layoutMeasurement.height - paddingToTop <= contentOffset.y;
+
+const handleContentSizeChangeList = () => {
+  if (sectionListRef.current) {
+    sectionListRef.current?.getScrollResponder()?.scrollTo({ y: 1755, animated: false });
+  }
+};
+const handleScroll = useCallback((event) => {
+  const currentTime = Date.now();
+  if (currentTime - lastCallTimeRef.current > 100) {
+    lastCallTimeRef.current = currentTime;
+
+  const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+
+  // Calculate the distance from the top before calling loadMore
+  const distanceFromTop = contentOffset.y;
+ const contentSizeHeight = contentSize.height;
+ const layoutMeasurementHeight = layoutMeasurement.height;
+  // Adjust this value to trigger loadMore slightly before reaching the top.
+  let triggerDistance = contentSizeHeight - layoutMeasurementHeight; // 50 pixels, adjust as needed
+   triggerDistance = triggerDistance - 80; // 50 pixels, adjust as needed
+  //  console.log('distanceFromTop: ',distanceFromTop);
+  //  console.log('contentOffset: ',contentOffset);
+   console.log('layoutMeasurement: ',layoutMeasurement);
+   console.log('contentSize: ',contentSize);
+   console.log('Distance check : '+distanceFromTop+' == '+triggerDistance+' ');
+  if (distanceFromTop >= -30 && distanceFromTop <= 5 && !isLoading) {
+    handleLoadMoreMessages();
+    // setContentSize(conten);
+  }
 }
+}, [pagination]);
 useEffect(() => {
     wsConnect();
     dispatch(setStart());
@@ -168,57 +190,78 @@ useEffect(() => {
 
     dispatch(fetchMessages(to));
     
+    if(!isLoading && (messages != null)){
+    
+    const timeoutId = setTimeout(() => {
+      sectionListRef.current?.getScrollResponder()?.scrollToEnd({ animated: false });
 
+      if (sectionListRef.current) {
+        sectionListRef.current.setNativeProps({
+          style: { opacity: 1 }, // Replace 'relative' with your desired position value
+        });
+      }
+      return () => clearTimeout(timeoutId);
+
+    },800);
+  }
 }, []);
-const renderCOM = () => {
-  return   <View style={[styles.input,{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:6,width:'100%'}]}>
-  {/* <View style={[{flexGrow:1,marginRight:4}]}> */}
-  <TextInput
-  style={[{fontSize:15,width:'84%'
-}]}
-multiline 
-onContentSizeChange={handleContentSizeChange}
-    placeholder='Enter your Message'
-    onChangeText={(text) => {
-      setFieldValue('content',text);
-      onTyping();
-    }}
-    value={values.content}
-  />
-    <TouchableOpacity style={[styles.button,{backgroundColor:commonColors.primary}]} onPress={handleSubmit} >
-        
-        <Text style={[styles.buttonText,{ color:themeColors.text }]}> Send</Text>
-      </TouchableOpacity>
-  </View>;
-}
+const renderitem = useCallback(
+  ({ item }) => <Message message={item} user={user.user.id} />,[messages]
+);
+const keyextractor = useCallback(
+ (item, index) => index.toString(),[messages]
+);
+const rendersectionHeader = useCallback(
+ ({section: {date}}) => (
+          <Text style={{textAlign:'center'}}>{date}</Text>
+        ),[messages]
+);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {apiError ? <View><Text>{apiError}</Text></View>: null}
       {isLoading ? <View style={{alignSelf:'center'}}><Text> <ActivityIndicator /></Text></View> : null}
-      { messages && 
-    <GiftedChat
-    style={{color:'#222'}}
-      messages={messages}
-      user={{ _id: user.user.id }}
-      // isLoadingEarlier ={isLoadingEarlier}
-      // loadEarlier={true}
-      onSend={messages => onSend(messages)}
-      alwaysShowSend={true}
-      renderComposer={renderCOM}
-      // textInputRef={textInputRef}
-      listViewProps={{
-        scrollEventThrottle: 400,
-        onScroll: ({ nativeEvent }) => {
-          if (isCloseToTop(nativeEvent)) {
-            console.log('ENDDDD');
+       {messages == null ? null : 
+       <SectionList
+       ref={sectionListRef}
+       sections={messages}
+       keyExtractor={keyextractor}
+       renderItem={renderitem}
+        renderSectionHeader={rendersectionHeader}
+       onScroll={handleScroll}
+      // inverted
+      //  style={{opacity:0}}
+      //  onContentSizeChange={handleContentSizeChangeList}
 
-            handleLoadMoreMessages()
-          }
-        }
-      }}
-    /> }
+      //  windowSize={10} 
+        />}
   
+
+
+    <View style={[styles.input,{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:6,width:'100%'}]}>
+    {/* <View style={[{flexGrow:1,marginRight:4}]}> */}
+    <TextInput
+    style={[{fontSize:15,width:'84%'
+  }]}
+  multiline 
+  onContentSizeChange={handleContentSizeChange}
+      placeholder='Enter your Message'
+      onChangeText={(text) => {
+        setFieldValue('content',text);
+        onTyping();
+      }}
+      value={values.content}
+    />
+     {/* {error && <Text style={{ color: themeColors.error,marginTop:2 }}>{error}</Text>} */}
+    {/* </View> */}
+     {/* <View style={{flexGrow:0}}> */}
+      <TouchableOpacity style={[styles.button,{backgroundColor:commonColors.primary}]} onPress={handleSubmit} >
+        
+        <Text style={[styles.buttonText,{ color:themeColors.text }]}> Send</Text>
+      </TouchableOpacity>
+      {/* </View> */}
+    </View>
+    {/* <MessageSendForm /> */}
     </SafeAreaView>
   )
 }

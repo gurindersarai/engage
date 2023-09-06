@@ -25,7 +25,7 @@ const messageSlice = createSlice({
 
     },
     appendMessage: (state, action) => {
-      state.messages.push(action.payload);
+      state.messages.push(...action.payload);
       state.isLoading = false;
       state.apiError = null;
     },

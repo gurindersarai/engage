@@ -1,6 +1,6 @@
 // authActions.js
 import { clearCredentials,getCredentials,storeCredentials } from '../../utils/mmkvStorage';
-import { setMessages,setPagination,prependMessage,setError,setStart } from '../slices/messageSlice';
+import { setMessages,setPagination,appendMessage,setError,setStart } from '../slices/messageSlice';
 
 
   export const fetchMessages = (to=false,cPage=1) => async (dispatch) => {
@@ -35,10 +35,10 @@ import { setMessages,setPagination,prependMessage,setError,setStart } from '../s
               dispatch(setError(data.message));
             }else{
               console.log('cpage: '+cPage+' > ',data.pagination_data);
-              console.log('MM',data.messages.data);
+              // console.log('MM',data.messages.data);
               if(cPage> 1){
-                console.log('Dmess: ',JSON.stringify(data.messages));
-              dispatch(prependMessage(data.messages.data));
+                // console.log('Dmess: ',JSON.stringify(data.messages));
+              dispatch(appendMessage(data.messages.data));
               }else{
                 dispatch(setMessages(data.messages.data));
               }
