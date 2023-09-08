@@ -10,8 +10,9 @@ import { useDispatch,useSelector } from 'react-redux';
 import { commonColors } from '../../styles/index';
 // import MessageSendForm from './MessageSendForm';
 import { fetchMessages } from '../../redux/actions/messageActions.js';
-import { appendMessage,prependMessage,setStart } from '../../redux/slices/messageSlice';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { appendMessage,prependSingleMessage,prependMessage,setStart } from '../../redux/slices/messageSlice';
+import { GiftedChat,Send } from 'react-native-gifted-chat';
+import {Svg, SvgUri, Circle,Ellipse,Line, G,Rect, Path,Polyline,Polygon,getUriFromSource} from 'react-native-svg';
 
 import Message from './Message';
 
@@ -58,7 +59,7 @@ const MessageList = ({ route }) => {
     },
   });
   const tEle = (name,isTyping) => {
-    return <View><Text style={{color:'#fff',fontWeight: 'bold',fontSize:20}}>{name}</Text>{ isTyping && <Text style={{color:'#ddd',fontStyle: 'italic',fontSize:10}}>is Typing..</Text>}</View>;
+    return <View><Text style={{color:'#fff',fontWeight: 'bold',fontSize:20}}>{name}</Text>{ isTyping && <Text style={{color:'#70d6ff',fontStyle: 'italic',fontSize:14}}>is Typing..</Text>}</View>;
   }
   const wsConnect = async () => {
     if(!credentials.token){
@@ -72,8 +73,9 @@ const MessageList = ({ route }) => {
     console.log('onMessage',event);
     const data = JSON.parse(event.data);
     navigation.setOptions({ headerTitle:() => ( tEle(uto.name,data.isTyping) ) });
-    if(data.content){
-    dispatch(prependMessage([data]));
+    if(data._id && data.content){
+      // GiftedChat.append();
+    dispatch(prependSingleMessage(data));
     }
   };
 
@@ -84,23 +86,26 @@ const MessageList = ({ route }) => {
   ws.onclose = function (event) {
     console.log('WebSocket connection closed:', event);
   };
-  const sendMessage = async () => {
+  const sendMessage = useCallback((fmessages = []) => {
     const msgData = {
       _id:Date.now(),
       from:user.user.id,
       to:to,
-        content: values.content,
-        text: values.content,
+        content: fmessages[0].text,
+        text: fmessages[0].text,
         createdAt:new Date(),
         user:{_id:user.user.id},
         isTyping:false,
     }
       console.log("ws Send!",msgData);
       
-      ws.send(JSON.stringify(msgData));
-      dispatch(prependMessage([msgData]));
+      ws.send(JSON.stringify(msgData));     
+      const gf =  GiftedChat.append(messages,fmessages);
+      dispatch(prependSingleMessage(...fmessages));
+      console.log('FsSSS',...fmessages);
+      console.log('GF',gf);
 
-}
+  }, []);
 const onTyping = () => {
   
   clearTimeout(typingTimer);
@@ -191,7 +196,31 @@ onContentSizeChange={handleContentSizeChange}
       </TouchableOpacity>
   </View>;
 }
-
+const renderSendFunc = (props) =>{
+    return (
+      <Send
+        {...props}
+        containerStyle={{
+          height: 60,
+          width: 60,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Svg  width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={themeColors.primary} stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><Line x1="22" y1="2" x2="11" y2="13"/><Polygon points="22 2 15 22 11 13 2 9 22 2" /></Svg>
+      </Send>
+    );
+}
+const renderCustomActions = (props) => {
+  return (
+    <TouchableOpacity onPress={() => handleAttachFile()}>
+      <Svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={commonColors.darkGreen} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-paperclip"><Path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></Svg>
+    </TouchableOpacity>
+  );
+}
+const handleAttachFile = () =>{
+  console.log('Attch');
+}
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {apiError ? <View><Text>{apiError}</Text></View>: null}
@@ -201,12 +230,20 @@ onContentSizeChange={handleContentSizeChange}
     style={{color:'#222'}}
       messages={messages}
       user={{ _id: user.user.id }}
+      containerStyle={{
+        backgroundColor: themeColors.background
+      }}
       // isLoadingEarlier ={isLoadingEarlier}
       // loadEarlier={true}
-      onSend={messages => onSend(messages)}
-      alwaysShowSend={true}
-      renderComposer={renderCOM}
+      onSend={messages => sendMessage(messages)}
+      // alwaysShowSend={true}
+      // renderComposer={renderCOM}
       // textInputRef={textInputRef}
+      onInputTextChanged={text => onTyping()}
+      showUserAvatar={false}
+      renderAvatar={null}
+      renderSend ={renderSendFunc}
+      renderActions={renderCustomActions}
       listViewProps={{
         scrollEventThrottle: 400,
         onScroll: ({ nativeEvent }) => {

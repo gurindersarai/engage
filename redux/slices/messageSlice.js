@@ -34,6 +34,11 @@ const messageSlice = createSlice({
       state.isLoading = false;
       state.apiError = null;
     },
+    prependSingleMessage: (state, action) => {
+      state.messages.unshift(action.payload);
+      state.isLoading = false;
+      state.apiError = null;
+    },
     setError: (state, action) => {
       state.isLoading = false;
       state.apiError = action.payload;
@@ -42,5 +47,5 @@ const messageSlice = createSlice({
   },
 });
 
-export const { setStart,setError,setPagination,setMessages,appendMessage,prependMessage } = messageSlice.actions;
+export const { setStart,setError,setPagination,setMessages,appendMessage,prependSingleMessage,prependMessage } = messageSlice.actions;
 export default messageSlice.reducer;
